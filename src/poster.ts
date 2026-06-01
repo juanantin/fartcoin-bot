@@ -43,13 +43,12 @@ export async function generatePost(mode: ContentMode, donationTotal?: string): P
   });
 
   const text = msg.content.find((b) => b.type === 'text')?.text ?? '';
-  // v1.1 has a 280 char limit unless the account has long tweets enabled
-  return text.slice(0, 280).trim();
+  return text.slice(0, 2000).trim();
 }
 
 export async function postTweet(client: TwitterApi, text: string): Promise<string> {
-  const tweet = await client.v1.tweet(text);
-  return String(tweet.id_str);
+  const tweet = await client.v2.tweet(text);
+  return tweet.data.id;
 }
 
 export async function runPost(client: TwitterApi, counter: number): Promise<void> {
