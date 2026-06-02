@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import axios from 'axios';
 import { TwitterApi } from 'twitter-api-v2';
 import { fetchDonationTotal } from './donation';
+import { sendToTelegram } from './telegram';
 
 const CA = 'HnXDnwTa68tRhLRZdJkVRLAeYrUkCYgFgDavtwD1pump';
 const WEBSITE = 'fartcoin.meme';
@@ -88,4 +89,6 @@ export async function runPost(counter: number): Promise<void> {
 
   const id = await postTweet(text);
   console.log(`[poster] posted tweet id=${id}`);
+
+  await sendToTelegram(text, id);
 }
