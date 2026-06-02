@@ -4,6 +4,7 @@ dotenv.config();
 import cron from 'node-cron';
 import { runPost } from './poster';
 import { replyToMentions, makeRepliesClient } from './replies';
+import { startTelegramBot } from './tgbot';
 
 const POST_SCHEDULE = process.env.POST_SCHEDULE ?? '0 8,14,20 * * *';
 const REPLY_SCHEDULE = '*/30 * * * *';
@@ -32,5 +33,8 @@ cron.schedule(REPLY_SCHEDULE, async () => {
     console.error('[scheduler] replies failed:', err);
   }
 });
+
+// Start Telegram interactive bot
+startTelegramBot();
 
 console.log('Scheduler running. Waiting for next scheduled time...');
