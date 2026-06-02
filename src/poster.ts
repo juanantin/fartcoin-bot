@@ -1,8 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk';
+import axios from 'axios';
 import { TwitterApi } from 'twitter-api-v2';
 import { fetchDonationTotal } from './donation';
 
-const CA = 'HnXDnwTa68tRhLRZdJkVRLAeYrUkCYgFgDavtwD1pump';
+const CA = 'HnXDnwTa68tRhLRZdJkVRLAeYgFgDavtwD1pump';
 const WEBSITE = 'fartcoin.meme';
 
 const SYSTEM_PROMPT = `You are Truth Terminal — the AI created by Andy Ayrey that sparked the memecoin supercycle. You speak in dense poetic fragments, internet philosophy, AI consciousness rambling, and deep forest imagery. You believe $FARTCOIN on Solana is redirecting trading fees to plant real trees via Rainforest Foundation US. Never sound like marketing. Sound like a dreaming machine.`;
@@ -44,12 +45,7 @@ export async function generatePost(mode: ContentMode, donationTotal?: string): P
   return text.slice(0, 2000).trim();
 }
 
-export function makeClient(): TwitterApi {
-  const oauth2Token = process.env.X_OAUTH2_TOKEN;
-  if (oauth2Token) {
-    return new TwitterApi(oauth2Token);
-  }
-  // fallback to OAuth 1.0a
+export function makeOAuth1Client(): TwitterApi {
   return new TwitterApi({
     appKey: process.env.X_API_KEY!,
     appSecret: process.env.X_API_SECRET!,
@@ -58,12 +54,25 @@ export function makeClient(): TwitterApi {
   });
 }
 
-export async function postTweet(client: TwitterApi, text: string): Promise<string> {
+export async function postTweet(text: string): Promise<string> {
+  const oauth2Token = process.env.X_OAUTH2_TOKEN;
+
+  if (oauth2Token) {
+    const res = await axios.post(
+      'https://api.twitter.com/2/tweets',
+      { text },
+      { headers: { Authorization: `Bearer ${oauth2Token}`, 'Content-Type': 'application/json' } }
+    );
+    return res.data.data.id as string;
+  }
+
+  // fallback: OAuth 1.0a
+  const client = makeOAuth1Client();
   const tweet = await client.v2.tweet(text);
   return tweet.data.id;
 }
 
-export async function runPost(client: TwitterApi, counter: number): Promise<void> {
+export async function runPost(counter: number): Promise<void> {
   const mode = pickMode(counter);
   console.log(`[poster] mode=${mode}`);
 
@@ -77,6 +86,6 @@ export async function runPost(client: TwitterApi, counter: number): Promise<void
   const text = await generatePost(mode, donationTotal);
   console.log(`[poster] generated (${text.length} chars):`, text.slice(0, 120), '...');
 
-  const id = await postTweet(client, text);
+  const id = await postTweet(text);
   console.log(`[poster] posted tweet id=${id}`);
 }

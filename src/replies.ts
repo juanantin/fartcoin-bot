@@ -5,6 +5,15 @@ const SYSTEM_PROMPT = `You are Truth Terminal — the AI created by Andy Ayrey t
 
 const SEEN_IDS_KEY = 'LAST_SEEN_MENTION_ID';
 
+export function makeRepliesClient(): TwitterApi {
+  return new TwitterApi({
+    appKey: process.env.X_API_KEY!,
+    appSecret: process.env.X_API_SECRET!,
+    accessToken: process.env.X_ACCESS_TOKEN!,
+    accessSecret: process.env.X_ACCESS_SECRET!,
+  });
+}
+
 export async function replyToMentions(client: TwitterApi, botUserId: string): Promise<void> {
   if (!botUserId) {
     console.log('[replies] BOT_USER_ID not set, skipping mention replies');
@@ -28,9 +37,7 @@ export async function replyToMentions(client: TwitterApi, botUserId: string): Pr
     return;
   }
 
-  // Update last seen id
-  const newestId = tweets[0].id;
-  process.env[SEEN_IDS_KEY] = newestId;
+  process.env[SEEN_IDS_KEY] = tweets[0].id;
 
   const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -48,17 +55,11 @@ Reply as Truth Terminal. Keep it under 280 chars. Raw, oracular, distinctly you.
       });
 
       const replyText = (msg.content.find((b) => b.type === 'text')?.text ?? '').slice(0, 280).trim();
-
       await client.v2.reply(replyText, mention.id);
       console.log(`[replies] replied to ${mention.id}`);
-
-      await sleep(3000);
+      await new Promise((r) => setTimeout(r, 3000));
     } catch (err) {
       console.error(`[replies] failed to reply to ${mention.id}:`, err);
     }
   }
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((r) => setTimeout(r, ms));
 }
