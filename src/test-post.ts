@@ -1,21 +1,13 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import { TwitterApi } from 'twitter-api-v2';
-import { runPost } from './poster';
+import { makeClient, runPost } from './poster';
 
-const mode = process.argv[2] ?? 'lore'; // lore | donation | buycall
-
-const client = new TwitterApi({
-  appKey: process.env.X_API_KEY!,
-  appSecret: process.env.X_API_SECRET!,
-  accessToken: process.env.X_ACCESS_TOKEN!,
-  accessSecret: process.env.X_ACCESS_SECRET!,
-});
-
-// Map mode name to counter index
+const mode = process.argv[2] ?? 'lore';
 const counterMap: Record<string, number> = { lore: 0, donation: 1, buycall: 2 };
 const counter = counterMap[mode] ?? 0;
+
+const client = makeClient();
 
 console.log(`Forcing test post: mode=${mode}`);
 runPost(client, counter)

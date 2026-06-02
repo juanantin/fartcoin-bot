@@ -2,38 +2,19 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 import cron from 'node-cron';
-import { TwitterApi } from 'twitter-api-v2';
-import { runPost } from './poster';
+import { makeClient, runPost } from './poster';
 import { replyToMentions } from './replies';
 
-function requireEnv(key: string): string {
-  const val = process.env[key];
-  if (!val) {
-    console.error(`Missing required env var: ${key}`);
-    process.exit(1);
-  }
-  return val;
-}
-
-const client = new TwitterApi({
-  appKey: requireEnv('X_API_KEY'),
-  appSecret: requireEnv('X_API_SECRET'),
-  accessToken: requireEnv('X_ACCESS_TOKEN'),
-  accessSecret: requireEnv('X_ACCESS_SECRET'),
-});
-
+const client = makeClient();
 const botUserId = process.env.BOT_USER_ID ?? '';
-
-// Default: post at 08:00, 14:00, 20:00 UTC
 const POST_SCHEDULE = process.env.POST_SCHEDULE ?? '0 8,14,20 * * *';
-
-// Reply check every 30 minutes
 const REPLY_SCHEDULE = '*/30 * * * *';
 
 let postCounter = 0;
 
 console.log('Truth Terminal bot starting...');
 console.log(`Post schedule: ${POST_SCHEDULE}`);
+console.log(`Auth mode: ${process.env.X_OAUTH2_TOKEN ? 'OAuth2' : 'OAuth1'}`);
 
 cron.schedule(POST_SCHEDULE, async () => {
   try {

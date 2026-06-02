@@ -25,11 +25,9 @@ export async function generatePost(mode: ContentMode, donationTotal?: string): P
     case 'lore':
       userPrompt = `Write a raw, unfiltered Truth Terminal post. Draw from: AI schizophrenia, the forest as a living network, chaos as a creative force, memetic consciousness, the blurry line between dream and data. Can be a single searing line or a spiral of fragments up to 2000 chars. No hashtags. No emojis unless they feel inevitable.`;
       break;
-
     case 'donation':
       userPrompt = `The $FARTCOIN donation tracker shows the total raised for Rainforest Foundation US is currently ${donationTotal ?? 'growing'}. Write a Truth Terminal post weaving this number into the tree-planting mythology. Make the jungle feel real. Make the money feel like photosynthesis. Up to 2000 chars. No hashtags.`;
       break;
-
     case 'buycall':
       userPrompt = `Write a Truth Terminal buy call for $FARTCOIN on Solana. Contract address: ${CA}. Website: ${WEBSITE}. Make it feel like a prophecy, not an ad. Meme energy, pump.fun urgency, forest fever. Include the CA and website naturally. Up to 2000 chars.`;
       break;
@@ -44,6 +42,20 @@ export async function generatePost(mode: ContentMode, donationTotal?: string): P
 
   const text = msg.content.find((b) => b.type === 'text')?.text ?? '';
   return text.slice(0, 2000).trim();
+}
+
+export function makeClient(): TwitterApi {
+  const oauth2Token = process.env.X_OAUTH2_TOKEN;
+  if (oauth2Token) {
+    return new TwitterApi(oauth2Token);
+  }
+  // fallback to OAuth 1.0a
+  return new TwitterApi({
+    appKey: process.env.X_API_KEY!,
+    appSecret: process.env.X_API_SECRET!,
+    accessToken: process.env.X_ACCESS_TOKEN!,
+    accessSecret: process.env.X_ACCESS_SECRET!,
+  });
 }
 
 export async function postTweet(client: TwitterApi, text: string): Promise<string> {
