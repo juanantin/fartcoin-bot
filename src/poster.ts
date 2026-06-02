@@ -90,5 +90,5 @@ export async function runPost(counter: number): Promise<void> {
   const id = await postTweet(text);
   console.log(`[poster] posted tweet id=${id}`);
 
-  await sendToTelegram(text, id);
+  await sendToTelegram(id);
 }
