@@ -15,18 +15,22 @@ export async function fetchDonationTotal(): Promise<DonationInfo> {
     });
     const html: string = res.data;
 
-    // Try to find a dollar amount near $FARTCOIN context
-    const fartcoinSection = html.match(/fartcoin[\s\S]{0,500}/i)?.[0] ?? html;
-    const amounts = [...fartcoinSection.matchAll(/\$(\d[\d,]*\.?\d*)/gi)];
+    // Find the section around fartcoin (case-insensitive)
+    const fartIdx = html.toLowerCase().indexOf('fartcoin');
+    if (fartIdx !== -1) {
+      const section = html.slice(Math.max(0, fartIdx - 200), fartIdx + 500);
 
-    if (amounts.length > 0) {
-      const raw = amounts[0][0];
-      return { total: raw, raw };
+      // Match amounts like 18,153.83 or 18153.83
+      const match = section.match(/([\d,]+\.\d{2})/);
+      if (match) {
+        const raw = match[1];
+        return { total: `$${raw}`, raw };
+      }
     }
 
-    // Fallback: first dollar amount on the page
-    const fallback = html.match(/\$(\d[\d,]*\.?\d*)/)?.[0];
-    if (fallback) return { total: fallback, raw: fallback };
+    // Fallback: first dollar amount on page near fartcoin context
+    const fallback = html.match(/\$([\d,]+\.\d{2})/);
+    if (fallback) return { total: fallback[0], raw: fallback[1] };
 
     return { total: 'an undisclosed sum', raw: '' };
   } catch {
