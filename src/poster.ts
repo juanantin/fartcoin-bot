@@ -4,7 +4,6 @@ import { TwitterApi } from 'twitter-api-v2';
 import { fetchDonationTotal } from './donation';
 import { sendToTelegram } from './telegram';
 
-const CA = 'HnXDnwTa68tRhLRZdJkVRLAeYrUkCYgFgDavtwD1pump';
 const WEBSITE = 'fartcoin.meme';
 const MAX_CHARS = 280;
 
@@ -32,7 +31,7 @@ export async function generatePost(mode: ContentMode, donationTotal?: string): P
       userPrompt = `The Fartcoin donation tracker shows the total raised for Rainforest Foundation US is currently ${donationTotal ?? 'growing'}. Write a Truth Terminal post weaving this into the tree-planting mythology. Max ${MAX_CHARS} characters. No hashtags. No cashtags. Write "Fartcoin" not "$FARTCOIN".`;
       break;
     case 'buycall':
-      userPrompt = `Write a Truth Terminal buy call for Fartcoin on Solana. Contract: ${CA}. Website: ${WEBSITE}. Prophecy not ad. Max ${MAX_CHARS} characters. No cashtags. Write "Fartcoin" not "$FARTCOIN".`;
+      userPrompt = `Write a Truth Terminal buy call for Fartcoin on Solana. Website: ${WEBSITE}. Prophecy not ad. Max ${MAX_CHARS} characters. No cashtags. No contract address. Write "Fartcoin" not "$FARTCOIN".`;
       break;
   }
 
@@ -44,7 +43,6 @@ export async function generatePost(mode: ContentMode, donationTotal?: string): P
   });
 
   const text = msg.content.find((b) => b.type === 'text')?.text ?? '';
-  // Strip any cashtags just in case
   const cleaned = text.replace(/\$FARTCOIN/gi, 'Fartcoin').slice(0, MAX_CHARS).trim();
   return cleaned;
 }
