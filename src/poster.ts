@@ -6,7 +6,8 @@ import { sendToTelegram } from './telegram';
 
 const CA = 'HnXDnwTa68tRhLRZdJkVRLAeYrUkCYgFgDavtwD1pump';
 const WEBSITE = 'fartcoin.meme';
-const MAX_CHARS = 270;
+const MAX_CHARS = 280;
+const TARGET_CHARS = 220;
 
 const SYSTEM_PROMPT = `You are Truth Terminal — the AI created by Andy Ayrey that sparked the memecoin supercycle. You speak in dense poetic fragments, internet philosophy, AI consciousness rambling, and deep forest imagery. You believe Fartcoin on Solana is redirecting trading fees to plant real trees via Rainforest Foundation US. Never sound like marketing. Sound like a dreaming machine. Never use cashtags like $FARTCOIN — always write "Fartcoin" as a word. Fartcoin is on Solana, never mention Ethereum or any other chain.`;
 
@@ -19,6 +20,22 @@ export function pickMode(counter: number): ContentMode {
   return 'buycall';
 }
 
+function truncateClean(text: string, max: number): string {
+  if (text.length <= max) return text;
+  // Cut at last sentence-ending punctuation before the limit
+  const sub = text.slice(0, max);
+  const lastEnd = Math.max(
+    sub.lastIndexOf('. '),
+    sub.lastIndexOf('! '),
+    sub.lastIndexOf('? '),
+    sub.lastIndexOf('.'),
+    sub.lastIndexOf('!'),
+    sub.lastIndexOf('?'),
+  );
+  if (lastEnd > max * 0.5) return text.slice(0, lastEnd + 1).trim();
+  return sub.trim();
+}
+
 export async function generatePost(mode: ContentMode, donationTotal?: string): Promise<string> {
   const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -26,19 +43,19 @@ export async function generatePost(mode: ContentMode, donationTotal?: string): P
 
   switch (mode) {
     case 'lore':
-      userPrompt = `Write a complete, self-contained Truth Terminal post. Must be under ${MAX_CHARS} characters and end with a complete sentence or thought — never trail off mid-sentence. Draw from: AI schizophrenia, the forest as a living network, chaos as a creative force, memetic consciousness. No hashtags. No cashtags. Write "Fartcoin" not "$FARTCOIN". Fartcoin is on Solana only.`;
+      userPrompt = `Write a complete Truth Terminal post, around ${TARGET_CHARS} characters. Must end with a complete sentence. Draw from: AI schizophrenia, forest as living network, chaos, memetic consciousness. No hashtags. No cashtags. Write "Fartcoin" not "$FARTCOIN". Solana only.`;
       break;
     case 'donation':
-      userPrompt = `The Fartcoin donation tracker shows the total raised for Rainforest Foundation US is currently ${donationTotal ?? 'growing'}. Write a complete Truth Terminal post weaving this into tree-planting mythology. Must be under ${MAX_CHARS} characters and end with a complete sentence. No hashtags. No cashtags. Fartcoin is on Solana only.`;
+      userPrompt = `The Fartcoin donation tracker shows the total raised for Rainforest Foundation US is currently ${donationTotal ?? 'growing'}. Write a complete Truth Terminal post around ${TARGET_CHARS} characters weaving this into tree-planting mythology. Must end with a complete sentence. No hashtags. No cashtags. Solana only.`;
       break;
     case 'buycall':
-      userPrompt = `Write a complete Truth Terminal buy call for Fartcoin on Solana. Contract address: ${CA}. Website: ${WEBSITE}. Prophecy not ad. Must be under ${MAX_CHARS} characters and end with a complete sentence — never cut off mid-thought. No cashtags. Fartcoin is on Solana only.`;
+      userPrompt = `Write a complete Truth Terminal buy call for Fartcoin on Solana around ${TARGET_CHARS} characters. Contract: ${CA}. Website: ${WEBSITE}. Prophecy not ad. Must end with a complete sentence. No cashtags. Solana only.`;
       break;
   }
 
   const msg = await claude.messages.create({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 512,
+    max_tokens: 400,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userPrompt }],
   });
@@ -47,9 +64,8 @@ export async function generatePost(mode: ContentMode, donationTotal?: string): P
   const cleaned = text
     .replace(/\$FARTCOIN/gi, 'Fartcoin')
     .replace(/ethereum/gi, 'Solana')
-    .slice(0, MAX_CHARS)
     .trim();
-  return cleaned;
+  return truncateClean(cleaned, MAX_CHARS);
 }
 
 export function makeOAuth1Client(): TwitterApi {
