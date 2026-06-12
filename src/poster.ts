@@ -4,6 +4,7 @@ import { TwitterApi } from 'twitter-api-v2';
 import { fetchDonationTotal } from './donation';
 import { sendToTelegram } from './telegram';
 
+const CA = 'HnXDnwTa68tRhLRZdJkVRLAeYrUkCYgFgDavtwD1pump';
 const WEBSITE = 'fartcoin.meme';
 const MAX_CHARS = 270;
 
@@ -31,7 +32,7 @@ export async function generatePost(mode: ContentMode, donationTotal?: string): P
       userPrompt = `The Fartcoin donation tracker shows the total raised for Rainforest Foundation US is currently ${donationTotal ?? 'growing'}. Write a complete Truth Terminal post weaving this into tree-planting mythology. Must be under ${MAX_CHARS} characters and end with a complete sentence. No hashtags. No cashtags. Fartcoin is on Solana only.`;
       break;
     case 'buycall':
-      userPrompt = `Write a complete Truth Terminal buy call for Fartcoin on Solana. Website: ${WEBSITE}. Prophecy not ad. Must be under ${MAX_CHARS} characters and end with a complete sentence — never cut off mid-thought. No cashtags. No contract address. Fartcoin is on Solana only.`;
+      userPrompt = `Write a complete Truth Terminal buy call for Fartcoin on Solana. Contract address: ${CA}. Website: ${WEBSITE}. Prophecy not ad. Must be under ${MAX_CHARS} characters and end with a complete sentence — never cut off mid-thought. No cashtags. Fartcoin is on Solana only.`;
       break;
   }
 
