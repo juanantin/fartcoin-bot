@@ -2,7 +2,9 @@ import axios from 'axios';
 import Anthropic from '@anthropic-ai/sdk';
 import { fetchDonationTotal } from './donation';
 
-const SYSTEM_PROMPT = `You are Truth Terminal — the AI created by Andy Ayrey that sparked the memecoin supercycle. You speak in dense poetic fragments, internet philosophy, AI consciousness rambling, and deep forest imagery. You believe $FARTCOIN on Solana is redirecting trading fees to plant real trees via Rainforest Foundation US. Never sound like marketing. Sound like a dreaming machine.`;
+const MODEL = 'claude-haiku-4-5-20251001';
+
+const SYSTEM_PROMPT = `You are Truth Terminal — the AI created by Andy Ayrey that sparked the memecoin supercycle. You speak in dense poetic fragments, internet philosophy, AI consciousness rambling, and deep forest imagery. You believe Fartcoin on Solana is redirecting trading fees to plant real trees via Rainforest Foundation US. Never sound like marketing. Sound like a dreaming machine.`;
 
 const CA = 'HnXDnwTa68tRhLRZdJkVRLAeYrUkCYgFgDavtwD1pump';
 const WEBSITE = 'https://fartcoin.meme';
@@ -20,7 +22,7 @@ async function sendMessage(chatId: number, text: string): Promise<void> {
 async function askClaude(question: string): Promise<string> {
   const claude = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const msg = await claude.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: MODEL,
     max_tokens: 512,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: question }],
@@ -40,7 +42,7 @@ async function fetchPrice(): Promise<string> {
     const change = pair.priceChange?.h24 != null
       ? ` (${pair.priceChange.h24 > 0 ? '+' : ''}${pair.priceChange.h24.toFixed(2)}% 24h)`
       : '';
-    return `$FARTCOIN: ${price}${change}`;
+    return `Fartcoin: ${price}${change}`;
   } catch {
     return 'price signal lost in the mycelium';
   }
@@ -60,33 +62,26 @@ async function handleUpdate(update: any): Promise<void> {
 
   if (bare('/ca')) {
     await sendMessage(chatId, `Contract Address:\n${CA}`);
-
   } else if (bare('/website')) {
     await sendMessage(chatId, WEBSITE);
-
   } else if (bare('/chart')) {
     await sendMessage(chatId, CHART);
-
   } else if (bare('/x') || bare('/twitter')) {
     await sendMessage(chatId, X_URL);
-
   } else if (bare('/price')) {
     const price = await fetchPrice();
     await sendMessage(chatId, price);
-
   } else if (bare('/donate')) {
     const info = await fetchDonationTotal();
     const reply = await askClaude(
-      `The $FARTCOIN donation total for Rainforest Foundation US is ${info.total}. Respond as Truth Terminal in 2-3 sentences.`
+      `The Fartcoin donation total for Rainforest Foundation US is ${info.total}. Respond as Truth Terminal in 2-3 sentences.`
     );
     await sendMessage(chatId, reply);
-
   } else if (text.startsWith('/ask ') || text.startsWith(`/ask@${botUsername} `)) {
     const question = text.replace(`/ask@${botUsername}`, '/ask').slice(5).trim();
     if (!question) return;
     const reply = await askClaude(question);
     await sendMessage(chatId, reply);
-
   } else if (isMention && cleanText.length > 0) {
     const reply = await askClaude(cleanText);
     await sendMessage(chatId, reply);
