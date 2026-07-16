@@ -5,9 +5,11 @@ import cron from 'node-cron';
 import { runPost } from './poster';
 import { replyToMentions, makeRepliesClient } from './replies';
 import { startTelegramBot } from './tgbot';
+import { postDonationStats } from './stats';
 
 const POST_SCHEDULE = process.env.POST_SCHEDULE ?? '0 8,14,20 * * *';
 const REPLY_SCHEDULE = '*/30 * * * *';
+const STATS_SCHEDULE = '0 0,12 * * *'; // every 12h at midnight and noon UTC
 const botUserId = process.env.BOT_USER_ID ?? '';
 
 let postCounter = 0;
@@ -31,6 +33,14 @@ cron.schedule(REPLY_SCHEDULE, async () => {
     await replyToMentions(client, botUserId);
   } catch (err) {
     console.error('[scheduler] replies failed:', err);
+  }
+});
+
+cron.schedule(STATS_SCHEDULE, async () => {
+  try {
+    await postDonationStats();
+  } catch (err) {
+    console.error('[scheduler] stats failed:', err);
   }
 });
 

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Anthropic from '@anthropic-ai/sdk';
 import { fetchDonationTotal } from './donation';
+import { getDonationStats } from './stats';
 
 const MODEL = 'claude-haiku-4-5-20251001';
 
@@ -48,6 +49,33 @@ async function fetchPrice(): Promise<string> {
   }
 }
 
+function formatUsd(n: number): string {
+  if (n >= 1000) return `$${(n / 1000).toFixed(1)}k`;
+  return `$${n.toFixed(0)}`;
+}
+
+async function fetchStatsText(): Promise<string> {
+  const stats = await getDonationStats();
+  if (!stats) return 'donation data not yet available — DONATION_WALLET not configured or no onchain data yet.';
+
+  const gapAvg = stats.gapToAvgUsd > 0
+    ? `${formatUsd(stats.gapToAvgUsd)} below avg`
+    : `${formatUsd(-stats.gapToAvgUsd)} above avg`;
+  const gapAth = stats.gapToAthUsd > 0
+    ? `${formatUsd(stats.gapToAthUsd)} from ATH`
+    : 'new ATH today!';
+
+  return [
+    'Fartcoin donation pulse',
+    '',
+    `Today: ${formatUsd(stats.todayUsd)}`,
+    `Avg/day: ${formatUsd(stats.avgUsd)}`,
+    `ATH: ${formatUsd(stats.athUsd)} (${stats.athDate})`,
+    '',
+    `${gapAvg} | ${gapAth}`,
+  ].join('\n');
+}
+
 async function handleUpdate(update: any): Promise<void> {
   const msg = update.message;
   if (!msg || !msg.text) return;
@@ -77,6 +105,9 @@ async function handleUpdate(update: any): Promise<void> {
       `The Fartcoin donation total for Rainforest Foundation US is ${info.total}. Respond as Truth Terminal in 2-3 sentences.`
     );
     await sendMessage(chatId, reply);
+  } else if (bare('/stats')) {
+    const statsText = await fetchStatsText();
+    await sendMessage(chatId, statsText);
   } else if (text.startsWith('/ask ') || text.startsWith(`/ask@${botUsername} `)) {
     const question = text.replace(`/ask@${botUsername}`, '/ask').slice(5).trim();
     if (!question) return;
